@@ -10,8 +10,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from joblib import dump, load
 import json
 
-# appliances = ["Getting_Started_with_Meraki","General_Administration","MX","MR","MS","MG","MV","MT","SM","MI","Architectures_and_Best_Practices","Go","CiscoPlusSecureConnect","Firmware_Features","Cloud_Monitoring_for_Catalys"]
-# appliances = ["MX","MR","MS","MG","MV","MT","SM","MI","Go","Firmware"]
 appliancesDic = {"MX" : 0,"MR" : 0,"MS" : 0,"MG" : 0,"MV" : 0,"MT" : 0,"SM" : 0,"MI" : 0,"Go" : 0,"Firmware" : 0}
 synonymsDic = {"MS" : ["Meraki Switch"], "MV" : ["Meraki Vision"], "MR" : ["Meraki Router"]}
 
