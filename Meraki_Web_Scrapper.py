@@ -7,70 +7,24 @@ from sklearn.feature_extraction.text import CountVectorizer
 import re
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+from joblib import dump, load
+import json
 
-appliance = input("Enter Appliance: ")
+appliances = ["Getting_Started_with_Meraki","General_Administration","MX","MR","MS","MG","MV","MT","SM","MI","Architectures_and_Best_Practices","Go","CiscoPlusSecureConnect","Firmware_Features","Cloud_Monitoring_for_Catalys"]
 
-appliacne = appliance.upper()
+appliance = input("Enter appliance: ")
+with open(f'{appliance}_subWebPages.json','r') as f:
+    subWebPages = json.load(f)
 
-url = "https://documentation.meraki.com/" + appliacne
+vectorizer = load(f'{appliance}_vectorizer.joblib')
+X = load(f'{appliance}_tfidf_matrix.joblib')
 
-response = requests.get(url)
-
-print(response)
-
-soup = bs(response.content, 'html.parser')
-
-webpages = []
-
-for link in soup.find_all('a'):
-    if "/MX/" in link.get('href'): 
-        webpages.append(link.get('href'))
-        #print(link.get('href'))
-
-subWebPages = []
-for url in webpages:
-    response = requests.get(url)
-    soup = bs(response.content, 'html.parser')
-    for link in soup.find_all('a'):
-        if "/MX/" in link.get('href') and link.get('href') not in subWebPages and "jp"  not in link.get('href') and "CH"  not in link.get('href') and "https" in link.get('href') and "china" not in link.get('href'):
-            subWebPages.append(link.get('href'))
-
-# Go through each Page and collect all the words 
-Words = []
-for link in subWebPages:
-    print(link)
-    response = requests.get(link)
-    soup = bs(response.content,'html.parser')
-    Words.append(soup.get_text())
-
-
-stemmer = PorterStemmer()
-
-# Define the stop words
-stop_words = set(stopwords.words('english'))
-
-# Clean the text, tokenize it, remove stop words, and stem 
-
-for x in range(len(Words)):
-    print("Starting on webpage\n")
-    # Remove non-alphabetic characters and convert to lower
-    Words[x] = re.sub('a-zA-Z',' ',Words[x].lower())
-
-    # Tokenize
-    tokens = word_tokenize(Words[x])
-
-    # Remove stop words and stem the words 
-    tokens = [stemmer.stem(token) for token in tokens if token not in stop_words]
-
-    # Join the tokens back into a single string 
-    Words[x] = ' '.join(tokens)
-
-vectorizer = TfidfVectorizer()
-X = vectorizer.fit_transform(Words)
-
-question = "My DHCP is not working on my MX Device"
+# Enter Question and Vectorize it 
+question = "What are the highlights of the MV93 camera? What are the specifications? What is the datasheets?"
 
 question_vector = vectorizer.transform([question])
+
+# Get the cosine similarity between the question and Webpages 
 
 cosine_similarity = cosine_similarity(question_vector, X).flatten()
 
