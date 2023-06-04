@@ -11,15 +11,17 @@ from joblib import dump, load
 import json
 
 appliancesDic = {"MX" : 0,"MR" : 0,"MS" : 0,"MG" : 0,"MV" : 0,"MT" : 0,"SM" : 0,"MI" : 0,"Go" : 0,"Firmware" : 0}
-synonymsDic = {"MS" : ["Meraki Switch"], "MV" : ["Meraki Vision"], "MR" : ["Meraki Router"]}
+synonymsDic = {"MS" : ["Meraki Switch","Switch"], "MV" : ["Meraki Vision","Camera"], "MR" : ["Meraki Router","Router"]}
 
 question = input("Question: ")
 
 for appliance in appliancesDic.keys():
-    m = re.search(f'{appliance}',question,re.I)
+    m = re.search(rf'\b{appliance}',question,re.I)
     if m: 
-        #print(m.group())
+        print(m.group())
         appliancesDic[appliance] += 1
+    else:
+        print("No Match")
     
     if appliance in synonymsDic:
         for synonym in synonymsDic[appliance]:
