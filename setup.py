@@ -12,5 +12,4 @@ packages = ['requests', 'beautifulsoup4', 'nltk', 'scikit-learn', 'joblib', 'jso
 for package in packages:
     install(package)
 
-import nltk
-nltk.download('stopwords')
+
