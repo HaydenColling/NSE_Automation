@@ -9,18 +9,19 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from joblib import dump, load
 import json
+from concurrent.futures import ThreadPoolExecutor
+
+appliances = ["Getting_Started_with_Meraki", "General_Administration", "MX", "MR", "MS", "MG", "MV", "MT", "SM", "MI",
+              "Architectures_and_Best_Practices", "Go", "CiscoPlusSecureConnect", "Firmware_Features",
+              "Cloud_Monitoring_for_Catalys"]
 
 
-appliances = ["Getting_Started_with_Meraki","General_Administration","MX","MR","MS","MG","MV","MT","SM","MI","Architectures_and_Best_Practices","Go","CiscoPlusSecureConnect","Firmware_Features","Cloud_Monitoring_for_Catalys"]
-
-
-for appliance in appliances:
-
+def process_appliance(appliance):
     url = "https://documentation.meraki.com/" + appliance
 
     response = requests.get(url)
     if response.status_code == 404:
-        continue
+        return
 
     print(response)
 
@@ -29,9 +30,8 @@ for appliance in appliances:
     webpages = []
 
     for link in soup.find_all('a'):
-        if f"/{appliance}/" in link.get('href'): 
+        if f"/{appliance}/" in link.get('href'):
             webpages.append(link.get('href'))
-            #print(link.get('href'))
 
     subWebPages = []
     for url in webpages:
@@ -39,7 +39,7 @@ for appliance in appliances:
         soup = bs(response.content, 'html.parser')
         for link in soup.find_all('a'):
             href = link.get('href')
-            if href is not None and f"/{appliance}/" in href and href not in subWebPages and "jp"  not in href and "CH"  not in href and "https" in href and "china" not in href:
+            if href is not None and f"/{appliance}/" in href and href not in subWebPages and "jp" not in href and "CH" not in href and "https" in href and "china" not in href:
                 subWebPages.append(link.get('href'))
 
     # Go through each Page and collect all the words 
@@ -47,9 +47,8 @@ for appliance in appliances:
     for link in subWebPages:
         print(link)
         response = requests.get(link)
-        soup = bs(response.content,'html.parser')
+        soup = bs(response.content, 'html.parser')
         Words.append(soup.get_text())
-
 
     stemmer = PorterStemmer()
 
@@ -57,11 +56,10 @@ for appliance in appliances:
     stop_words = set(stopwords.words('english'))
 
     # Clean the text, tokenize it, remove stop words, and stem 
-
     for x in range(len(Words)):
-        print("Starting on webpage\n")
+        #print("Starting on webpage\n")
         # Remove non-alphabetic characters and convert to lower
-        Words[x] = re.sub('a-zA-Z',' ',Words[x].lower())
+        Words[x] = re.sub('a-zA-Z', ' ', Words[x].lower())
 
         # Tokenize
         tokens = word_tokenize(Words[x])
@@ -77,9 +75,14 @@ for appliance in appliances:
 
     # Dump Subweb pages to refrence later 
     with open(f'{appliance}_subWebPages.json', 'w') as f:
-        json.dump(subWebPages,f)
+        json.dump(subWebPages, f)
 
     # Save the Vectorizer and the TF-IDF matrix
     dump(vectorizer, f'{appliance}_vectorizer.joblib')
     dump(X, f'{appliance}_tfidf_matrix.joblib')
 
+
+numThreads = input("Enter number of threads [Higher is faster = More resources]: ")
+
+with ThreadPoolExecutor(max_workers=int(numThreads)) as executor:
+    executor.map(process_appliance, appliances)
