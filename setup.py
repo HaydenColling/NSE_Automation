@@ -11,3 +11,4 @@ for package in packages:
 
 import nltk
 nltk.download('stopwords')
+nltk.download('punkt')
